@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import html2canvas from "html2canvas";
 import Trash from "../icons/Trash";
 import { setNewOffset, autoGrow, setZIndex, bodyParser } from "../utils";
 import { db } from "../appwrite/databases";
@@ -84,6 +85,22 @@ const NoteCard = ({ note }) => {
         }, 2000);
     };
 
+    const handleDownload = async () => {
+        try {
+            const canvas = await html2canvas(cardRef.current);
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `${note.title}.jpg`;
+                link.click();
+                URL.revokeObjectURL(url);
+            }, "image/jpeg");
+        } catch (error) {
+            console.error("Error capturing note as image:", error);
+        }
+    };
+
     return (
         <div
             ref={cardRef}
@@ -92,8 +109,9 @@ const NoteCard = ({ note }) => {
                 left: `${position.x}px`,
                 top: `${position.y}px`,
                 backgroundColor: colors.colorBody,
-                
             }}
+            draggable
+           
         >
             <div
                 onMouseDown={mouseDown}
@@ -103,6 +121,7 @@ const NoteCard = ({ note }) => {
                 }}
             >
                 <DeleteButton noteId={note.$id} />
+                <button onClick={handleDownload}>Save</button>
 
                 {saving && (
                     <div className="card-saving">
